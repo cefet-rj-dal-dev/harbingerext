@@ -42,8 +42,6 @@ names(data) <- c("series", "event")
 # Nexus -------------------------------------------------------------------
 # Run Nexus ---------------------------------------------------------------
 run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches = 0, png_folder="dev/plots/") {
-  #require(tibble)
-  
   #Create auxiliary batch and slide counters
   bt_num <- 1
   sld_bt <- 1
