@@ -64,16 +64,27 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
       if (!ef_start) {
         parc <- online_detector$detection[which(online_detector$detection$event == 1),]
         parc$ef <- 1
+        
+        #First batch annotation
+        parc$first_batch <- 0
+        parc$first_batch[which(parc$ef == 1)] <- bt_num
+        
         ef_start <- TRUE
       } else {
         temp <- online_detector$detection[which(online_detector$detection$event == 1),]
         if (!is.null(temp)) {
+          
+          #Event frequency counter
           parc <- merge(temp, parc, all = TRUE)
           parc$ef[is.na(parc$ef)] <- 0
           parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
+          
+          #First batch annotation
+          parc$first_batch[is.na(parc$first_batch)] <- 0
+          parc$first_batch[which(parc$ef == 1)] <- bt_num
         }
-        print('...')
       }
+      #Batch number update
       bt_num <- bt_num + 1
     }
     
@@ -95,13 +106,17 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
     parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
   }
   
+  #First batch annotation
+  parc$first_batch[is.na(parc$first_batch)] <- 0
+  parc$first_batch[which(parc$ef == 1)] <- bt_num
+  
   #Batch frequency of a time series point t
   parc$bf <- ceiling((nrow(data)/batch_size)) - floor(parc$idx/(batch_size))
   
   #Event probability of a time series point t
   parc$pe <- parc$ef / parc$bf
   
-  online_detector$prob <- parc
+  online_detector$prob <- parc[,c(1,2,3,5,4,6,7)]
   return(online_detector)
 }
 
