@@ -106,10 +106,6 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
 }
 
 
-#Create and setup objects
-bt_size <- c(1,3,9,27,81)
-wm_size <- c(1,3,9,27,81)
-
 # establishing method
 #FBI-AD - ARIMA - CF - LSTM? - RN com regressão
 #https://nbviewer.org/github/cefet-rj-dal/harbinger-examples/blob/main/anomalies/hanr_ml_lstm.ipynb
@@ -125,8 +121,17 @@ source("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/
 reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/ts_tlstm.py")
 model <- hanr_ml(ts_tlstm(ts_gminmax(), input_size=4, epochs=10000)) #LSTM
 
+
 ## --------------------------------------------------------
+# Run Experiments
+
+#Create and setup objects
+bt_size <- c(1,3,9,27,81)
+wm_size <- c(1,3,9,27,81)
+
 result <- run_nexus(model=model, data=data, warm_size=wm_size[5], batch_size=bt_size[5], mem_batches=0, png_folder="dev/plots/")
+
+#View results
 View(result$detection)
 View(result$prob)
 
@@ -135,7 +140,7 @@ save(prob, file = "~/janio/harbinger/dev/prob_ph_81.RData")
 
 
 #Filter by limit
-plim = 0.9999
+plim = 0.5
 prob_lim <- subset(prob, pe > plim)
 
 det_prob <- result$detection
@@ -148,29 +153,20 @@ View(det_prob)
 sum(result$detection$event)
 sum(det_prob$event)
 
-#Head of detections
-ev_idx <- which(result$detection$event == 1)
-head(result$detection[ev_idx,])
-head(result$detection[-ev_idx,])
-
 
 # evaluating the detections
 evaluation <- evaluate(result$detector,
                        result$detection$event,
                        data$event)
-
 print(evaluation$confMatrix)
-
 
 #Evaluate limit query detection
 print(evaluate(result$detector, det_prob$event, data$event)$confMatrix)
 
 
-
 # plotting the results
 grf <- har_plot(result$detector, data$series, result$detection, data$event)
 plot(grf)
-
 
 # plotting limit query detection
 grf_lim <- har_plot(result$detector, data$series, det_prob, data$event)
