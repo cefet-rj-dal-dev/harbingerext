@@ -66,8 +66,8 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
         parc$ef <- 1
         
         #First batch annotation
-        parc$first_batch <- 0
-        parc$first_batch[which(parc$ef == 1)] <- bt_num
+        parc$fdb <- 0
+        parc$fdb[which(parc$ef == 1)] <- bt_num
         
         ef_start <- TRUE
       } else {
@@ -80,8 +80,8 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
           parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
           
           #First batch annotation
-          parc$first_batch[is.na(parc$first_batch)] <- 0
-          parc$first_batch[which(parc$ef == 1)] <- bt_num
+          parc$fdb[is.na(parc$fdb)] <- 0
+          parc$fdb[which(parc$ef == 1)] <- bt_num
         }
       }
       #Batch number update
@@ -107,8 +107,8 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
   }
   
   #First batch annotation
-  parc$first_batch[is.na(parc$first_batch)] <- 0
-  parc$first_batch[which(parc$ef == 1)] <- bt_num
+  parc$fdb[is.na(parc$fdb)] <- 0
+  parc$fdb[which(parc$ef == 1)] <- bt_num
   
   #Batch frequency of a time series point t
   parc$bf <- ceiling((nrow(data)/batch_size)) - floor(parc$idx/(batch_size))
