@@ -116,7 +116,7 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
   #Event probability of a time series point t
   parc$pe <- parc$ef / parc$bf
   
-  online_detector$prob <- parc[,c(1,2,3,5,4,6,7)]
+  online_detector$prob <- parc[,c(1,5,4,6,7)]
   return(online_detector)
 }
 
