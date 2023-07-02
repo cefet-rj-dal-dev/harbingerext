@@ -5,10 +5,10 @@
 library(devtools)
 
 
-# Install and load Harbinger, Nexus and DalEvents -----------------------------
-devtools::install_github("cefet-rj-dal/daltoolbox", force=TRUE, dependencies=FALSE, upgrade="never", build_vignettes = TRUE)
-devtools::install_github("cefet-rj-dal/harbinger", force=TRUE, dependencies=FALSE, upgrade="never", build_vignettes = TRUE)
-devtools::install_github("cefet-rj-dal/event_datasets", force = TRUE, dep=FALSE, upgrade="never")
+# Install and load Harbinger, Nexus, Dal Tool Box and DalEvents -----------------------------
+#devtools::install_github("cefet-rj-dal/daltoolbox", force=TRUE, dependencies=FALSE, upgrade="never", build_vignettes = TRUE)
+#devtools::install_github("cefet-rj-dal/harbinger", force=TRUE, dependencies=FALSE, upgrade="never", build_vignettes = TRUE)
+#devtools::install_github("cefet-rj-dal/event_datasets", force = TRUE, dep=FALSE, upgrade="never")
 
 
 # Load packages
@@ -131,10 +131,14 @@ model <- hcp_cf_lr() #CF using Linear Regression - PROBLEM
 model <- hanr_garch() #GARCH
 model <- hanr_ml() #ML Linear Regression
 
+source("https://raw.githubusercontent.com/cefet-rj-dal/harbinger-examples/main/jupyter_harbinger.R")
 library("reticulate")
-source("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/ts_tlstm.R")
-reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/ts_tlstm.py")
-model <- hanr_ml(ts_tlstm(ts_gminmax(), input_size=4, epochs=10000)) #LSTM
+source("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/jupyter_daltoolbox.R")
+source("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/ts_lstm.R")
+reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/ts_lstm.py")
+
+model <- hanr_ml(ts_lstm(ts_norm_gminmax(), input_size=4, epochs=10000)) #LSTM
+
 
 
 ## --------------------------------------------------------
