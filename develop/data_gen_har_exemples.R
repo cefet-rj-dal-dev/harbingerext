@@ -1,4 +1,3 @@
-
 gen_data <- function() {
   require(tseries)
   require(forecast)
@@ -13,7 +12,7 @@ gen_data <- function() {
     event[50] <- TRUE
     x[50] <- x[50] + 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example1 <- data.frame(serie = x, event = event)
   }
 
   { # time series 2
@@ -24,7 +23,7 @@ gen_data <- function() {
     event[50] <- TRUE
     x[50] <- x[50] - 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example2 <- data.frame(serie = x, event = event)
   }
 
   { # time series 3
@@ -35,7 +34,7 @@ gen_data <- function() {
     event[50] <- TRUE
     x[50] <- x[50] + 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example3 <- data.frame(serie = x, event = event)
   }
 
   { # time series 4
@@ -46,7 +45,7 @@ gen_data <- function() {
     x[51:101] <- max(x[51:99]) - x[51:101]
     event[50] <- TRUE
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example4 <- data.frame(serie = x, event = event)
   }
 
   { # time series 5
@@ -58,7 +57,7 @@ gen_data <- function() {
     event[50] <- TRUE
     x[50] <- x[50] + 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example5 <- data.frame(serie = x, event = event)
   }
 
   { # time series 6
@@ -70,7 +69,7 @@ gen_data <- function() {
     event[50] <- TRUE
     x[50] <- x[50] - 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example6 <- data.frame(serie = x, event = event)
   }
 
   { # time series 7
@@ -85,7 +84,7 @@ gen_data <- function() {
     event[50] <- TRUE
     x[50] <- x[50] + 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example7 <- data.frame(serie = x, event = event)
   }
 
 
@@ -101,46 +100,46 @@ gen_data <- function() {
     event[50] <- TRUE
     x[50] <- x[50] - 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
-  }
-
-  nonstationarity_sym <- function(ts.len,ts.mean,ts.var) {
-    #x variable (time)
-    t <- c(1:ts.len)
-
-    #stationary time series
-    set.seed(1234)
-    sta <- arima.sim(model=list(ar=0.5), n=ts.len, mean=ts.mean, sd=sqrt(ts.var)) #AR(1)
-
-    #trend-stationary time series
-    trend <- 0.04*t
-    tsta <- sta + trend
-
-    #level-stationary time series
-    increase.level <- 5
-    level <- c(rep(ts.mean,ts.len/2),rep(ts.mean+increase.level,ts.len/2))
-    lsta <- sta + level
-
-    #heteroscedastic time series (nonstationary in variance)
-    increase.var <- 2
-    var.level <- c(rep(1,ts.len/2),rep(increase.var,ts.len/2))
-    hsta <- sta * var.level
-
-    #difference-stationarity (unit root) (stationary around a stochastic trend)
-    set.seed(123)
-    dsta <- cumsum(rnorm(ts.len, mean=ts.mean, sd=sqrt(ts.var)))
-
-    return(c(sta,tsta,lsta,hsta,dsta))
+    har_examples$example8 <- data.frame(serie = x, event = event)
   }
 
   { # time series 9
+    nonstationarity_sym <- function(ts.len,ts.mean,ts.var) {
+      #x variable (time)
+      t <- c(1:ts.len)
+
+      #stationary time series
+      set.seed(1234)
+      sta <- arima.sim(model=list(ar=0.5), n=ts.len, mean=ts.mean, sd=sqrt(ts.var)) #AR(1)
+
+      #trend-stationary time series
+      trend <- 0.04*t
+      tsta <- sta + trend
+
+      #level-stationary time series
+      increase.level <- 5
+      level <- c(rep(ts.mean,ts.len/2),rep(ts.mean+increase.level,ts.len/2))
+      lsta <- sta + level
+
+      #heteroscedastic time series (nonstationary in variance)
+      increase.var <- 2
+      var.level <- c(rep(1,ts.len/2),rep(increase.var,ts.len/2))
+      hsta <- sta * var.level
+
+      #difference-stationarity (unit root) (stationary around a stochastic trend)
+      set.seed(123)
+      dsta <- cumsum(rnorm(ts.len, mean=ts.mean, sd=sqrt(ts.var)))
+
+      return(c(sta,tsta,lsta,hsta,dsta))
+    }
+
     x <- nonstationarity_sym(ts.len=200,ts.mean=0,ts.var=1)
     i <- 1:length(x)
 
     event <- rep(FALSE, length(x))
     event[c(200,400,500,600,700,800)] <- TRUE
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example9 <- data.frame(serie = x, event = event)
   }
 
   { # time series 10
@@ -157,7 +156,7 @@ gen_data <- function() {
     event[70] <- TRUE
     x[70] <- x[70] + 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example10 <- data.frame(serie = x, event = event)
   }
 
   sta <- function(ts.len,ts.mean,ts.var) {
@@ -176,7 +175,7 @@ gen_data <- function() {
 
     event <- rep(FALSE, length(x))
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example11 <- data.frame(serie = x, event = event)
   }
 
   tsta <- function(ts.len,ts.mean,ts.var) {
@@ -198,7 +197,7 @@ gen_data <- function() {
 
     event <- rep(FALSE, length(x))
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example12 <- data.frame(serie = x, event = event)
   }
 
   lsta <- function(ts.len,ts.mean,ts.var) {
@@ -222,32 +221,32 @@ gen_data <- function() {
     event <- rep(FALSE, length(x))
     event[c(100)] <- TRUE
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
-  }
-
-  hsta <- function(ts.len,ts.mean,ts.var) {
-    t <- c(1:ts.len)
-
-    #stationary time series
-    set.seed(1234)
-    sta <- arima.sim(model=list(ar=0.5), n=ts.len, mean=ts.mean, sd=sqrt(ts.var)) #AR(1)
-
-    #heteroscedastic time series (nonstationary in variance)
-    increase.var <- 2
-    var.level <- c(rep(1,ts.len/2),rep(increase.var,ts.len/2))
-    hsta <- sta * var.level
-
-    return(hsta)
+    har_examples$example13 <- data.frame(serie = x, event = event)
   }
 
   { # time series 14
+    hsta <- function(ts.len,ts.mean,ts.var) {
+      t <- c(1:ts.len)
+
+      #stationary time series
+      set.seed(1234)
+      sta <- arima.sim(model=list(ar=0.5), n=ts.len, mean=ts.mean, sd=sqrt(ts.var)) #AR(1)
+
+      #heteroscedastic time series (nonstationary in variance)
+      increase.var <- 2
+      var.level <- c(rep(1,ts.len/2),rep(increase.var,ts.len/2))
+      hsta <- sta * var.level
+
+      return(hsta)
+    }
+
     x <- hsta(ts.len=200,ts.mean=0,ts.var=1)
     i <- 1:length(x)
 
     event <- rep(FALSE, length(x))
     event[c(100)] <- TRUE
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example14 <- data.frame(serie = x, event = event)
   }
 
   { # time series 15
@@ -271,7 +270,7 @@ gen_data <- function() {
     x[76] <- x[26]
     x[77] <- x[27]
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example15 <- data.frame(serie = x, event = event)
   }
 
   { # time series 16
@@ -283,7 +282,7 @@ gen_data <- function() {
     desv <- 3*sd(x[1:(length(x)-1)]-x[2:length(x)])
     x[50:52] <- x[50:52] + desv
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example16 <- data.frame(serie = x, event = event)
   }
 
   { # time series 17
@@ -302,7 +301,7 @@ gen_data <- function() {
     x[102] <- x[102] + desv
     event[c(12,24,38,50,64,76,90,102)] <- TRUE
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example17 <- data.frame(serie = x, event = event)
   }
 
   { # time series 18
@@ -321,30 +320,30 @@ gen_data <- function() {
     x[97] <- x[97] + desv
     event[c(12,24,38,50,64,76,85,97)] <- TRUE
 
-    har_examples[[length(har_examples)+1]] <- data.frame(serie = x, event = event)
+    har_examples$example18 <- data.frame(serie = x, event = event)
   }
-
   return(har_examples)
 }
 
 
-plot_examples <- function(har_examples) {
-  for (i in 1:length(har_examples)) {
-    data <- har_examples[[i]]
-    y <- data$serie
-    x <- 1:length(y)
-    plot(x = x, y = y)
-    lines(x = x, y = y)
+if (FALSE) {
+  plot_examples <- function(har_examples) {
+    for (i in 1:length(har_examples)) {
+      data <- har_examples[[i]]
+      y <- data$serie
+      x <- 1:length(y)
+      plot(x = x, y = y)
+      lines(x = x, y = y)
+    }
   }
+
+
+  save_examples <- function(har_examples) {
+    save(har_examples, file="./data/har_examples.RData", compress = TRUE)
+  }
+
+  har_examples <- gen_data()
+  plot_examples(har_examples)
+  save_examples(har_examples)
 }
-
-
-save_examples <- function(har_examples) {
-  save(har_examples, file="./data/har_examples.RData", compress = TRUE)
-}
-
-
-har_examples <- gen_data()
-plot_examples(har_examples)
-save_examples(har_examples)
 
