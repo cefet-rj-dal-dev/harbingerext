@@ -259,16 +259,19 @@ gen_data <- function() {
     x[25] <- x[25] + 0.5*sdr
     x[26] <- x[26] + 0.25*sdr
     x[27] <- x[27] + 0.5*sdr
+    x[28] <- x[28] + 0.5*sdr
 
     event[50] <- TRUE
     x[50] <- x[25]
     x[51] <- x[26]
     x[52] <- x[27]
+    x[53] <- x[28]
 
     event[75] <- TRUE
     x[75] <- x[25]
     x[76] <- x[26]
     x[77] <- x[27]
+    x[78] <- x[28]
 
     har_examples$example15 <- data.frame(serie = x, event = event)
   }
@@ -339,7 +342,7 @@ if (FALSE) {
 
 
   save_examples <- function(har_examples) {
-    save(har_examples, file="./data/har_examples.RData", compress = TRUE)
+    save(har_examples, file="./develop/har_examples.RData", compress = TRUE)
   }
 
   har_examples <- gen_data()
