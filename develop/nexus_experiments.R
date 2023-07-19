@@ -5,7 +5,7 @@
 library(devtools)
 
 
-# Install and load Harbinger, Nexus, Dal Tool Box and DalEvents -----------------------------
+# Install and load Harbinger, Nexus and DalEvents -----------------------------
 #devtools::install_github("cefet-rj-dal/daltoolbox", force=TRUE, dependencies=FALSE, upgrade="never", build_vignettes = TRUE)
 #devtools::install_github("cefet-rj-dal/harbinger", force=TRUE, dependencies=FALSE, upgrade="never", build_vignettes = TRUE)
 #devtools::install_github("cefet-rj-dal/event_datasets", force = TRUE, dep=FALSE, upgrade="never")
@@ -40,86 +40,6 @@ names(data) <- c("series", "event")
 
 # Nexus -------------------------------------------------------------------
 # Run Nexus ---------------------------------------------------------------
-run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches = 0, png_folder="dev/plots/") {
-  #Create auxiliary batch and slide counters
-  bt_num <- 1
-  sld_bt <- 1
-  ef_start <- FALSE
-  
-  #Prepare data to experiment
-  datasource <- nex_simulated_datasource("data", data$series)
-  online_detector <- nexus(datasource, model, warm_size = warm_size, batch_size = batch_size, mem_batches = mem_batches)
-  online_detector <- warmup(online_detector)
-  
-  #Sliding batches through series
-  while (!is.null(online_detector$datasource)) {
-    online_detector <- detect(online_detector)
-    
-    #Update batch and slide counters
-    print(paste("Current position:", sld_bt+warm_size))
-    sld_bt <- sld_bt + 1
-    
-    if (sld_bt %% batch_size == 0) {
-      
-      if (!ef_start) {
-        parc <- online_detector$detection[which(online_detector$detection$event == 1),]
-        parc$ef <- 1
-        
-        #First batch annotation
-        parc$fdb <- 0
-        parc$fdb[which(parc$ef == 1)] <- bt_num
-        
-        ef_start <- TRUE
-      } else {
-        temp <- online_detector$detection[which(online_detector$detection$event == 1),]
-        if (!is.null(temp)) {
-          
-          #Event frequency counter
-          parc <- merge(temp, parc, all = TRUE)
-          parc$ef[is.na(parc$ef)] <- 0
-          parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
-          
-          #First batch annotation
-          parc$fdb[is.na(parc$fdb)] <- 0
-          parc$fdb[which(parc$ef == 1)] <- bt_num
-        }
-      }
-      #Batch number update
-      bt_num <- bt_num + 1
-    }
-    
-    #Print partial results
-    print("Results:")
-    print(table(online_detector$detection$event))
-    print("--------------------------")
-    print(paste("Batch:", bt_num))
-    print("==========================")
-    
-  }
-  
-  ##EVENT PROBABILITY
-  #Last batch update
-  temp <- online_detector$detection[which(online_detector$detection$event == 1),]
-  if (!is.null(temp)) {
-    parc <- merge(temp, parc, all = TRUE)
-    parc$ef[is.na(parc$ef)] <- 0
-    parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
-  }
-  
-  #First batch annotation
-  parc$fdb[is.na(parc$fdb)] <- 0
-  parc$fdb[which(parc$ef == 1)] <- bt_num
-  
-  #Batch frequency of a time series point t
-  parc$bf <- ceiling((nrow(data)/batch_size)) - floor(parc$idx/(batch_size))
-  
-  #Event probability of a time series point t
-  parc$pe <- parc$ef / parc$bf
-  
-  online_detector$prob <- parc[,c(1,5,4,6,7)]
-  return(online_detector)
-}
-
 
 # establishing method
 #FBI-AD - ARIMA - CF - LSTM? - RN com regressão
@@ -131,14 +51,15 @@ model <- hcp_cf_lr() #CF using Linear Regression - PROBLEM
 model <- hanr_garch() #GARCH
 model <- hanr_ml() #ML Linear Regression
 
+
 source("https://raw.githubusercontent.com/cefet-rj-dal/harbinger-examples/main/jupyter_harbinger.R")
+load_harbinger()
 library("reticulate")
 source("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/jupyter_daltoolbox.R")
 source("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/ts_lstm.R")
 reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/daltoolbox-examples/main/ts_lstm.py")
 
-model <- hanr_ml(ts_lstm(ts_norm_gminmax(), input_size=4, epochs=10000)) #LSTM
-
+model <- hanr_ml(ts_lstm(ts_norm_gminmax(), input_size=4, epochs=10000)) #LSTM - PROBLEM
 
 
 ## --------------------------------------------------------
@@ -154,9 +75,39 @@ result <- run_nexus(model=model, data=data, warm_size=wm_size[5], batch_size=bt_
 View(result$detection)
 View(result$prob)
 
-prob <- result$prob
-save(prob, file = "~/janio/harbinger/dev/prob_ph_81.RData")
 
+
+#Execution time analysis
+plot(result$time,
+     xlab = "Batch",
+     ylab = "Exec. Time (s)",
+     type = "l",
+     main = "Accumulated Execution Time")
+
+time_per_batch <- diff(result$time)
+
+plot(time_per_batch,
+     xlab = "Batch",
+     ylab = "Exec. Time (s)",
+     type = "l",
+     main = "Execution Time per Batch")
+
+lines(x = 1:length(time_per_batch), y = rep(mean(time_per_batch), length(time_per_batch)),
+      lty = 2, #Tipo de linha
+      lwd = 1, #Tipo de linha
+      col="red")
+
+#Adição de legendas
+legend(x = "topleft",                 #Posição da legenda
+       legend = "Average time per batch",   #Legenda
+       lty = 2, lwd = 1,              #Configurações do símbolo (neste caso linha)
+       bty = "n",                     #Caixa ao redor da legenda "n" = nenhuma
+       col="red")
+
+
+
+prob <- result$prob
+#save(prob, file = "~/janio/harbinger/dev/prob_ph_81.RData")
 
 #Filter by limit
 plim = 0.5
