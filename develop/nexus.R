@@ -140,33 +140,26 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
   start_time <- Sys.time()
   while (!is.null(online_detector$datasource)) {
     online_detector <- detect(online_detector)
-    
-    
     #Update batch and slide counters
     print(paste("Current position:", sld_bt+warm_size))
     sld_bt <- sld_bt + 1
     
     if (sld_bt %% batch_size == 0) {
       exec_time <- append(exec_time, as.numeric(difftime(Sys.time(),start_time, units = "secs")))
-      
       if (!ef_start) {
         parc <- online_detector$detection[which(online_detector$detection$event == 1),]
         parc$ef <- 1
-        
         #First batch annotation
         parc$fdb <- 0
         parc$fdb[which(parc$ef == 1)] <- bt_num
-        
         ef_start <- TRUE
       } else {
         temp <- online_detector$detection[which(online_detector$detection$event == 1),]
         if (!is.null(temp)) {
-          
           #Event frequency counter
           parc <- merge(temp, parc, all = TRUE)
           parc$ef[is.na(parc$ef)] <- 0
           parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
-          
           #First batch annotation
           parc$fdb[is.na(parc$fdb)] <- 0
           parc$fdb[which(parc$ef == 1)] <- bt_num
@@ -175,41 +168,31 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
       #Batch number update
       bt_num <- bt_num + 1
     }
-    
     #Print partial results
     print("Results:")
     print(table(online_detector$detection$event))
     print("--------------------------")
     print(paste("Batch:", bt_num))
     print("==========================")
-    
   }
   
   #Last batch execution time record
   exec_time <- append(exec_time, as.numeric(difftime(Sys.time(),start_time, units = "secs")))
-  
-  ##EVENT PROBABILITY
   #Last batch update
-  
   temp <- online_detector$detection[which(online_detector$detection$event == 1),]
   if (!is.null(temp)) {
     parc <- merge(temp, parc, all = TRUE)
     parc$ef[is.na(parc$ef)] <- 0
     parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
   }
-  
   #First batch annotation
   parc$fdb[is.na(parc$fdb)] <- 0
   parc$fdb[which(parc$ef == 1)] <- bt_num
-  
   #Batch frequency of a time series point t
   parc$bf <- ceiling((nrow(data)/batch_size)) - floor(parc$idx/(batch_size))
-  
   #Event probability of a time series point t
   parc$pe <- parc$ef / parc$bf
-  
   online_detector$prob <- parc[,c(1,5,4,6,7)]
-  
   online_detector$time <- exec_time
   return(online_detector)
 }
