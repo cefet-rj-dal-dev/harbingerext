@@ -109,29 +109,20 @@ detect.nexus <- function(obj) {
     
     detection$idx <- detection$idx + idxref
     detection$event <- as.integer(detection$event)
-    
-    ##Under development
-    #detection$ef <- 0 #Events frequency of a series point
-    
-    ##Under development
-    #Detection temporal lag
-    #detection$first_batch <- 0 #First batch where the event was detected
-    #detection$last_batch <- 0 #Last batch where the event was detected
-    
+
     obj$detection <- rbind(obj$stable_detection, detection)
   }
   return(obj)
 }
 
 # Run Nexus ---------------------------------------------------------------
-run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches = 0, png_folder="dev/plots/") {
+run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches = 0) {
   #Create auxiliary batch and slide counters
   bt_num <- 1
   sld_bt <- 1
   exec_time <- c()
   ef_start <- FALSE
   
-  #Prepare data to experiment
   datasource <- nex_simulated_datasource("data", data$series)
   online_detector <- nexus(datasource, model, warm_size = warm_size, batch_size = batch_size, mem_batches = mem_batches)
   online_detector <- warmup(online_detector)
@@ -147,12 +138,14 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
     if (sld_bt %% batch_size == 0) {
       exec_time <- append(exec_time, as.numeric(difftime(Sys.time(),start_time, units = "secs")))
       if (!ef_start) {
-        parc <- online_detector$detection[which(online_detector$detection$event == 1),]
-        parc$ef <- 1
         #First batch annotation
-        parc$fdb <- 0
-        parc$fdb[which(parc$ef == 1)] <- bt_num
-        ef_start <- TRUE
+        parc <- online_detector$detection[which(online_detector$detection$event == 1),]
+        if(nrow(parc) != 0) {
+          parc$ef <- 1
+          parc$fdb <- 0
+          parc$fdb[which(parc$ef == 1)] <- bt_num
+          ef_start <- TRUE
+        }
       } else {
         temp <- online_detector$detection[which(online_detector$detection$event == 1),]
         if (!is.null(temp)) {
