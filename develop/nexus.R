@@ -194,17 +194,19 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
 lag_evaluate <- function(pos, nexus_result, reference) {
   #Result info collect
   t_res_info <- nexus_result$prob[nexus_result$prob$idx == pos,]
+  wsz <- nexus_result$warm_size
   bsz <- nexus_result$batch_size
+  #Formula parameters
+  sb_t <- ceiling(pos / (bsz+wsz))
   
   if (nrow(t_res_info) > 0) {
     #Formula parameters
     fdb_t <- t_res_info$fdb
-    sb_t <- ceiling(pos / bsz)
     #Lag calculation
     lag_t = fdb_t - sb_t
     #Return lag analysis
     return(data.frame(idx = pos, fdb = fdb_t, sb = sb_t, lag = lag_t, batch_size = bsz, method = class(nexus_result$detector)[1]))
   }
   #Return info about not lag available
-  return(data.frame(idx = pos, fdb = NA, sb = ceiling(pos / bsz), lag = NA, batch_size = bsz, method = class(nexus_result$detector)[1]))
+  return(data.frame(idx = pos, fdb = NA, sb = sb_t, lag = NA, batch_size = bsz, method = class(nexus_result$detector)[1]))
 }
