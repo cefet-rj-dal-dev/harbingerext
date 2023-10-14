@@ -20,21 +20,22 @@ library(dalevents)
 # Load dataset ------------------------------------------------------------
 #Select desired series and time interval
 
-##====
 #ph variable
 #Interval of a day with anomalies
 data(gecco)
 data <- subset(gecco$gecco[16500:18000,], select = c(ph, event))
 
-##====
 #Adjust variables names
+  #"series" refers to the time series values
+  #"event" refers to the event labels
+  #the line index refers to the position of the analyzed point
 names(data) <- c("series", "event")
 
 
 # Nexus -------------------------------------------------------------------
 # Run Nexus ---------------------------------------------------------------
 
-# establishing method
+# Establishing method
 model <- hanr_fbiad() #FBI-AD
 model <- hcp_cf_lr() #CF using Linear Regression
 
@@ -46,8 +47,11 @@ wm_size <- c(1,3,9,27,81)
 mem_bt <- c(0,3,9)
 
 #Choose the model in lines 38-39 before running the experiment
-result <- run_nexus(model=model, data=data, warm_size=wm_size[5], batch_size=bt_size[5], mem_batches=mem_bt[2])
+result <- run_nexus(model=model, data=data, warm_size=wm_size[5], batch_size=bt_size[5], mem_batches=mem_bt[1])
 
+
+# View Stream Detections --------------------------------------------------
+View(result$detection)
 
 
 # View Stream Results ----------------------------------------------------
@@ -58,22 +62,50 @@ View(result$prob)
 lag_evaluate(pos=36, nexus_result=result, reference = data$event)
 
 
-
 # View Detections Metrics -------------------------------------------------
 # evaluating the detections
+
 evaluation <- evaluate(result$detector,
                        result$detection$event,
                        data$event)
+#Confusion matrix
 print(evaluation$confMatrix)
 
+#Metrics Example
+evaluation$accuracy
+evaluation$F1
 
 
 # Visual Analysis ---------------------------------------------------------
-
 # plotting the results
 grf <- har_plot(result$detector, data$series, result$detection, data$event)
 plot(grf)
 
+
+# Probability comparison --------------------------------------------------
+#Recover probabilites from Stream Results
+prob <- result$prob
+
+#Filter by limit
+plim = 0.8
+prob_lim <- subset(prob, pe > plim)
+
+det_prob <- result$detection
+det_prob$event <- 0
+det_prob$event[which(det_prob$idx %in% prob_lim$idx)] <- 1
+
+View(det_prob)
+
+#Sum of events
+sum(result$detection$event)
+sum(det_prob$event)
+
+#Evaluate limit query detection
+print(evaluate(result$detector, det_prob$event, data$event)$confMatrix)
+
+# plotting limit query detection
+grf_lim <- har_plot(result$detector, data$series, det_prob, data$event)
+plot(grf_lim)
 
 
 # Execution time analysis -------------------------------------------------
@@ -102,32 +134,3 @@ legend(x = "topleft",                 #Posição da legenda
        lty = 2, lwd = 1,              #Configurações do símbolo (neste caso linha)
        bty = "n",                     #Caixa ao redor da legenda "n" = nenhuma
        col="red")
-
-
-
-
-
-# Probability comparison --------------------------------------------------
-prob <- result$prob
-#save(prob, file = "~/janio/harbinger/dev/prob_ph_81.RData")
-
-#Filter by limit
-plim = 0.8
-prob_lim <- subset(prob, pe > plim)
-
-det_prob <- result$detection
-det_prob$event <- 0
-det_prob$event[which(det_prob$idx %in% prob_lim$idx)] <- 1
-
-View(det_prob)
-
-#Sum of events
-sum(result$detection$event)
-sum(det_prob$event)
-
-#Evaluate limit query detection
-print(evaluate(result$detector, det_prob$event, data$event)$confMatrix)
-
-# plotting limit query detection
-grf_lim <- har_plot(result$detector, data$series, det_prob, data$event)
-plot(grf_lim)
