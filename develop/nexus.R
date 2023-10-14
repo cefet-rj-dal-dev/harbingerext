@@ -132,6 +132,7 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
   while (!is.null(online_detector$datasource)) {
     online_detector <- detect(online_detector)
     if (deb) {
+      print("Debug mode: On")
       print(paste("Current position:", sld_bt+warm_size))
     }
     
