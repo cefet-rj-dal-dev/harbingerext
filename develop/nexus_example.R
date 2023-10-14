@@ -31,13 +31,15 @@ data <- subset(gecco$gecco[16500:18000,], select = c(ph, event))
   #the line index refers to the position of the analyzed point
 names(data) <- c("series", "event")
 
+head(data)
+head(data[data$event==1,])
 
 # Nexus -------------------------------------------------------------------
 # Run Nexus ---------------------------------------------------------------
 
 # Establishing method
 model <- hanr_fbiad() #FBI-AD
-model <- hcp_cf_lr() #CF using Linear Regression
+#model <- hcp_cf_lr() #CF using Linear Regression
 
 
 # Run Experiments ---------------------------------------------------------
@@ -51,12 +53,12 @@ result <- run_nexus(model=model, data=data, warm_size=wm_size[5], batch_size=bt_
 
 
 # View Stream Detections --------------------------------------------------
-View(result$detection)
+head(result$detection)
 
 
 # View Stream Results ----------------------------------------------------
 #Event Probability
-View(result$prob)
+head(result$prob)
 
 #Detection lag to t=36
 lag_evaluate(pos=36, nexus_result=result, reference = data$event)
@@ -134,3 +136,4 @@ legend(x = "topleft",                 #Posição da legenda
        lty = 2, lwd = 1,              #Configurações do símbolo (neste caso linha)
        bty = "n",                     #Caixa ao redor da legenda "n" = nenhuma
        col="red")
+
