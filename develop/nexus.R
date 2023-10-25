@@ -193,7 +193,7 @@ stream_evaluate <- function(time=0, nexus_result) {
     sb_t <- ceiling(time / (bsz+wsz))
     if (nrow(t_res_info) > 0) {
       fdb_t <- t_res_info$fdb
-      lag_t = fdb_t - sb_t
+      lag_t <- fdb_t - sb_t
       stream_res <- data.frame(time = time, pe = t_res_info$pe,
                                fdb = fdb_t, sb = sb_t,
                                lag = lag_t, batch_size = bsz, method = mt)
