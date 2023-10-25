@@ -115,18 +115,17 @@ detect.nexus <- function(obj) {
   return(obj)
 }
 
-# Run Nexus ---------------------------------------------------------------
+
+# Nexus: Stream Detector Manager ----------------------------------------------
 run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches = 0) {
   bt_num <- 1
   sld_bt <- 1
   exec_time <- c()
   ef_start <- FALSE
   deb = FALSE
-  
   datasource <- nex_simulated_datasource("data", data$series)
   online_detector <- nexus(datasource, model, warm_size = warm_size, batch_size = batch_size, mem_batches = mem_batches)
   online_detector <- warmup(online_detector)
-  
   print("Starting streaming analysis...")
   start_time <- Sys.time()
   while (!is.null(online_detector$datasource)) {
@@ -135,7 +134,6 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
       print("Debug mode: On")
       print(paste("Current position:", sld_bt+warm_size))
     }
-    
     sld_bt <- sld_bt + 1
     if (sld_bt %% batch_size == 0) {
       exec_time <- append(exec_time, as.numeric(difftime(Sys.time(),start_time, units = "secs")))
@@ -158,11 +156,9 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
           parc$fdb[which(parc$ef == 1)] <- bt_num
         }
       }
-      
       bt_num <- bt_num + 1
     }
     if (deb) {
-      #Print partial results in debug mode
       print("Results:")
       print(table(online_detector$detection$event))
       print("--------------------------")
@@ -170,21 +166,16 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
       print("==========================")
     }
   }
-  
   exec_time <- append(exec_time, as.numeric(difftime(Sys.time(),start_time, units = "secs")))
-  
   temp <- online_detector$detection[which(online_detector$detection$event == 1),]
   if (!is.null(temp)) {
     parc <- merge(temp, parc, all = TRUE)
     parc$ef[is.na(parc$ef)] <- 0
     parc$ef[which(parc$event == 1)] <- parc$ef[which(parc$event == 1)] + 1
   }
-  
   parc$fdb[is.na(parc$fdb)] <- 0
   parc$fdb[which(parc$ef == 1)] <- bt_num
-  
   parc$bf <- ceiling((nrow(data)/batch_size)) - floor(parc$idx/(batch_size))
-  
   parc$pe <- parc$ef / parc$bf
   online_detector$prob <- parc[,c(1,5,4,6,7)]
   online_detector$time <- exec_time
@@ -193,17 +184,31 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
 }
 
 
-lag_evaluate <- function(pos, nexus_result, reference) {
-  t_res_info <- nexus_result$prob[nexus_result$prob$idx == pos,]
-  wsz <- nexus_result$warm_size
+stream_evaluate <- function(time=0, nexus_result) {
+  mt <- class(nexus_result$detector)[1]
   bsz <- nexus_result$batch_size
-  sb_t <- ceiling(pos / (bsz+wsz))
-  
-  if (nrow(t_res_info) > 0) {
-    fdb_t <- t_res_info$fdb
-    lag_t = fdb_t - sb_t
-    
-    return(data.frame(idx = pos, fdb = fdb_t, sb = sb_t, lag = lag_t, batch_size = bsz, method = class(nexus_result$detector)[1]))
-  }
-  return(data.frame(idx = pos, fdb = NA, sb = sb_t, lag = NA, batch_size = bsz, method = class(nexus_result$detector)[1]))
+  wsz <- nexus_result$warm_size
+  if (time > 0) {
+    t_res_info <- nexus_result$prob[nexus_result$prob$idx == time,]
+    sb_t <- ceiling(time / (bsz+wsz))
+    if (nrow(t_res_info) > 0) {
+      fdb_t <- t_res_info$fdb
+      lag_t = fdb_t - sb_t
+      stream_res <- data.frame(time = time, pe = t_res_info$pe,
+                               fdb = fdb_t, sb = sb_t,
+                               lag = lag_t, batch_size = bsz, method = mt)
+      } else {
+      stream_res <- data.frame(time = time, pe = t_res_info$pe,
+                               fdb = NA, sb = sb_t,
+                               lag = NA, batch_size = bsz, method = mt)
+      }
+    } else {
+    stream_res <- nexus_result$prob[,c(1,5,2)]
+    stream_res$sb <- ceiling(stream_res$idx / (wsz + bsz))
+    stream_res$lag <- stream_res$fdb - stream_res$sb
+    stream_res$batch_size <- bsz
+    stream_res$method <- mt
+    names(stream_res)[1] <- "time"
+    }
+  return(stream_res)
 }
