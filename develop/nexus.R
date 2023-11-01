@@ -184,7 +184,7 @@ run_nexus <- function(model, data, warm_size = 30, batch_size = 30, mem_batches 
 }
 
 
-stream_evaluate <- function(time=0, nexus_result) {
+stream_evaluate <- function(nexus_result, time=0) {
   mt <- class(nexus_result$detector)[1]
   bsz <- nexus_result$batch_size
   wsz <- nexus_result$warm_size
